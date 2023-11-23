@@ -103,6 +103,18 @@ require('lazy').setup({
     branch = "master"
   },
 
+  -- Surround
+  {
+    "kylechui/nvim-surround",
+    version = "*", -- Use for stability; omit to use `main` branch for the latest features
+    event = "VeryLazy",
+    config = function()
+      require("nvim-surround").setup({
+        -- Configuration here, or leave empty to use defaults
+      })
+    end
+  },
+
   -- NOTE: This is where your plugins related to LSP can be installed.
   --  The configuration is done below. Search for lspconfig to find it below.
   {
@@ -154,7 +166,8 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
       on_attach = function(bufnr)
-        vim.keymap.set('n', '<leader>vp', require('gitsigns').preview_hunk, { buffer = bufnr, desc = 'Preview git hunk' })
+        vim.keymap.set('n', '<leader>vp', require('gitsigns').preview_hunk,
+          { buffer = bufnr, desc = 'Preview git hunk' })
 
         -- don't override the built-in and fugitive keymaps
         local gs = package.loaded.gitsigns
@@ -547,6 +560,7 @@ require('which-key').register {
   ['<leader>v'] = { name = 'More git', _ = 'which_key_ignore' },
   ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
   ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
+  ['<leader>t'] = { name = '[T]erminal', _ = 'which_key_ignore' },
   ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
   ['<leader>h'] = { name = '[H]arpoon', _ = 'which_key_ignore' },
   ['<leader>i'] = { name = '[I]nvisible chars', _ = 'which_key_ignore' },
@@ -607,7 +621,13 @@ mason_lspconfig.setup_handlers {
 }
 
 -- [[ Nvim-Tree ]]
-require("nvim-tree").setup()
+require("nvim-tree").setup({
+  actions = {
+    open_file = {
+      quit_on_open = true,
+    },
+  },
+})
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
@@ -670,23 +690,44 @@ cmp.setup.cmdline(':', {
 })
 
 -- [[ My Settings ]]
+-- WSL2 clipboard !!! Remove if not using windows
+if vim.fn.system('uname -r'):find("microsoft") then
+  vim.g.clipboard = {
+    name = 'WslClipboard',
+    copy = {
+      ['+'] = 'clip.exe',
+      ['*'] = 'clip.exe',
+    },
+    paste = {
+      ['+'] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring():gsub("\\r", ""))',
+      ['*'] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring():gsub("\\r", ""))',
+    },
+    cache_enabled = 0,
+  }
+end
+
+-- Relative numbers
+vim.o.relativenumber = true
+
 -- Folding
 vim.o.foldmethod = 'expr'
 vim.o.foldexpr = 'nvim_treesitter#foldexpr()'
 vim.o.foldenable = false -- disable on startup
 
 -- Indentation
-require 'nvim-treesitter.configs'.setup {
+require 'nvim-treesitter.configs'.setup({
   indent = {
     enable = true
   }
-}
-vim.o.expandtab = true
-vim.o.tabstop = 4
+})
+vim.opt_global.expandtab = true
+vim.opt_local.shiftwidth = 4
 vim.cmd([[
-  autocmd FileType javascript setlocal tabstop=2
-  autocmd FileType html setlocal tabstop=2
-  autocmd FileType typescript setlocal tabstop=2
+  autocmd FileType javascript setlocal shiftwidth=2
+  autocmd FileType javascriptreact setlocal shiftwidth=2
+  autocmd FileType html setlocal shiftwidth=2
+  autocmd FileType typescript setlocal shiftwidth=2
+  autocmd FileType typescriptreact setlocal shiftwidth=2
   " Ajoutez d'autres autocmd pour d'autres types de fichiers au besoin
 ]])
 
@@ -704,6 +745,12 @@ vim.cmd([[
 -- Format document
 vim.keymap.set("n", "<leader>ff", ":Format<CR>")
 
+-- Split view
+vim.api.nvim_set_keymap('n', '<C-w>+', ':horizontal resize +5<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<C-w>-', ':horizontal resize -5<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<C-w>>', ':vertical resize +5<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<C-w><', ':vertical resize -5<CR>', { noremap = true, silent = true })
+
 -- Scroll and search -> center cursor
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
 vim.keymap.set("n", "<C-d>", "<C-d>zz")
@@ -719,7 +766,11 @@ vim.keymap.set("n", "<leader>is", ":set list<CR>", { desc = "[Invisible chars]: 
 vim.keymap.set("n", "<leader>ih", ":set nolist<CR>", { desc = "[Invisible chars]: [H]ide" })
 
 -- Terminal
-vim.keymap.set("n", "<leader>tn", ":Terminal<CR>", { desc = "[Terminal]: [N]ew" })
+vim.keymap.set("n", "<leader>tn", ":terminal<CR>", { desc = "[Terminal]: New [T]erminal" })
+vim.keymap.set("n", "<leader>tv", ":rightbelow vsplit term://bash | vertical resize 60<CR>a",
+  { desc = "[Terminal]: New Terminal in [V]ertical split" })
+vim.keymap.set("n", "<leader>th", ":rightbelow split term://bash | resize 10<CR>a",
+  { desc = "[Terminal]: New Terminal in [H]orizontal split" })
 
 -- Harpoon
 vim.api.nvim_set_keymap("n", "<leader>hm", ":lua require('harpoon.mark').add_file()<CR>",
