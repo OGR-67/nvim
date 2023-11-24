@@ -97,6 +97,9 @@ require('lazy').setup({
     opts = {} -- this is equalent to setup({}) function
   },
 
+  -- Autoclose tags
+  'windwp/nvim-ts-autotag',
+
   -- Multi line cursor
   {
     'mg979/vim-visual-multi',
@@ -449,6 +452,10 @@ vim.defer_fn(function()
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
 
+    -- Autoclose tags
+    autotag = {
+      enable = true,
+    },
     highlight = { enable = true },
     indent = { enable = true },
     incremental_selection = {
