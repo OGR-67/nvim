@@ -118,6 +118,9 @@ require('lazy').setup({
     end
   },
 
+  -- To search for snippets
+  "benfowler/telescope-luasnip.nvim",
+
   -- NOTE: This is where your plugins related to LSP can be installed.
   --  The configuration is done below. Search for lspconfig to find it below.
   {
@@ -348,6 +351,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 -- See `:help telescope` and `:help telescope.setup()`
 require('telescope').setup {
   defaults = {
+    file_ignore_patterns = { "venv", "node_modules", ".git" },
     mappings = {
       i = {
         ['<C-u>'] = false,
@@ -440,6 +444,7 @@ vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { de
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
 
 require("telescope").load_extension('harpoon')
+require("telescope").load_extension('luasnip')
 
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
@@ -557,6 +562,14 @@ local on_attach = function(_, bufnr)
   vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
     vim.lsp.buf.format()
   end, { desc = 'Format current buffer with LSP' })
+
+  -- diagnostics
+  vim.lsp.diagnostic.configurations[_.id] = {
+    virtual_text = true,
+    signs = true,
+    underline = true,
+    update_in_insert = true,
+  }
 end
 
 -- document existing key chains
@@ -688,7 +701,13 @@ cmp.setup {
 }
 
 cmp.setup.cmdline(':', {
-  mapping = cmp.mapping.preset.cmdline(),
+  mapping = cmp.mapping.preset.cmdline({
+    ['<C-R>'] = cmp.mapping.confirm {
+      behavior = cmp.ConfirmBehavior.Replace,
+      select = true,
+    },
+    ['<Tab>'] = cmp.mapping.complete_common_string
+  }),
   sources = cmp.config.sources({
     { name = 'path' }
   }, {
@@ -697,7 +716,7 @@ cmp.setup.cmdline(':', {
 })
 
 -- [[ My Settings ]]
--- WSL2 clipboard !!! Remove if not using windows
+-- WSL2 clipboard
 if vim.fn.system('uname -r'):find("microsoft") then
   vim.g.clipboard = {
     name = 'WslClipboard',
@@ -741,6 +760,9 @@ vim.cmd([[
 -- Invisible chars
 vim.o.listchars = "tab:→\\ ,space:·,eol:↲"
 
+-- 80 chars per line
+vim.opt_local.colorcolumn = "81"
+
 -- [[ My Keymaps ]]
 -- File browser
 vim.keymap.set("n", "<leader>fb", ":NvimTreeOpen<CR>", { desc = "[NvimTree]: Open [B]rowser" })
@@ -749,8 +771,14 @@ vim.cmd([[
   autocmd BufEnter * if (winnr("$") == 1 && exists("b:loaded_nvim_tree") && b:loaded_nvim_tree) | NvimTreeClose | endif
 ]])
 
+-- Resource buffer
+vim.keymap.set("n", "<leader>fr", ":so ~/.config/nvim/init.lua<CR>", { desc = "Re-source buffer" })
+
 -- Format document
-vim.keymap.set("n", "<leader>ff", ":Format<CR>")
+vim.keymap.set("n", "<leader>ff", ":Format<CR>", { desc = "Format document" })
+
+-- Search snippets
+vim.keymap.set("n", "<leader>fs", ":Telescope luasnip<CR>", { silent = true, desc = "find a snippet" })
 
 -- Split view
 vim.api.nvim_set_keymap('n', '<C-w>+', ':horizontal resize +5<CR>', { noremap = true, silent = true })
@@ -758,11 +786,22 @@ vim.api.nvim_set_keymap('n', '<C-w>-', ':horizontal resize -5<CR>', { noremap = 
 vim.api.nvim_set_keymap('n', '<C-w>>', ':vertical resize +5<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<C-w><', ':vertical resize -5<CR>', { noremap = true, silent = true })
 
--- Scroll and search -> center cursor
+-- Scroll, move and search -> center cursor
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
 vim.keymap.set("n", "<C-d>", "<C-d>zz")
 vim.keymap.set("n", "n", "nzz")
 vim.keymap.set("n", "N", "Nzz")
+vim.keymap.set("n", "j", "jzz")
+vim.keymap.set("n", "k", "kzz")
+vim.keymap.set("n", "l", "lzz")
+vim.keymap.set("n", "h", "hzz")
+vim.keymap.set("n", "G", "Gzz")
+vim.keymap.set("v", "j", "jzz")
+vim.keymap.set("v", "k", "kzz")
+vim.keymap.set("v", "l", "lzz")
+vim.keymap.set("v", "h", "hzz")
+vim.keymap.set("v", "G", "Gzz")
+vim.keymap.set("c", "<CR>", "<CR>zz")
 
 -- ESC
 vim.keymap.set("i", "jk", "<ESC>")
@@ -784,9 +823,9 @@ vim.api.nvim_set_keymap("n", "<leader>hm", ":lua require('harpoon.mark').add_fil
   { noremap = true, silent = true, desc = "Mark file" })
 vim.api.nvim_set_keymap("n", "<leader>ht", ':Telescope harpoon marks<CR>',
   { noremap = true, silent = true, desc = "Toggle menu" })
-vim.api.nvim_set_keymap('n', '<leader>hn', ":lua require('harpoon.ui').nav_next()<CR>",
+vim.api.nvim_set_keymap('n', '<leader>hf', ":lua require('harpoon.ui').nav_next()<CR>",
   { noremap = true, silent = true, desc = "Next" })
-vim.api.nvim_set_keymap('n', '<leader>hp', ":lua require('harpoon.ui').nav_prev()<CR>",
+vim.api.nvim_set_keymap('n', '<leader>hd', ":lua require('harpoon.ui').nav_prev()<CR>",
   { noremap = true, silent = true, desc = "Previous" })
 vim.api.nvim_set_keymap('n', '<leader>h1', ":lua require('harpoon.term').gotoTerminal(1)<CR>",
   { noremap = true, silent = true, desc = "Go to terminal 1" })
