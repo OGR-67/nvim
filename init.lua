@@ -260,47 +260,6 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     dependencies = {
       'nvim-treesitter/nvim-treesitter-textobjects',
-      {
-        "JMarkin/nvim-tree.lua-float-preview",
-        lazy = true,
-        -- default
-        opts = {
-          -- wrap nvimtree commands
-          wrap_nvimtree_commands = true,
-          -- lines for scroll
-          scroll_lines = 20,
-          -- window config
-          window = {
-            style = "minimal",
-            relative = "win",
-            border = "rounded",
-            wrap = false,
-          },
-          mapping = {
-            -- scroll down float buffer
-            down = { "<C-d>" },
-            -- scroll up float buffer
-            up = { "<C-e>", "<C-u>" },
-            -- enable/disable float windows
-            toggle = { "<C-x>" },
-          },
-          -- hooks if return false preview doesn't shown
-          hooks = {
-            pre_open = function(path)
-              -- if file > 5 MB or not text -> not preview
-              local size = require("float-preview.utils").get_size(path)
-              if type(size) ~= "number" then
-                return false
-              end
-              local is_text = require("float-preview.utils").is_text(path)
-              return size < 5 and is_text
-            end,
-            post_open = function(bufnr)
-              return true
-            end,
-          },
-        },
-      },
     },
     build = ':TSUpdate',
 
@@ -403,35 +362,6 @@ require('telescope').setup {
   },
 }
 
-HEIGHT_PADDING = 10
-WIDTH_PADDING = 15
-require('float-preview').setup({
-  window = {
-    wrap = false,
-    trim_height = false,
-    open_win_config = function()
-      local screen_w = vim.opt.columns:get()
-      local screen_h = vim.opt.lines:get() - vim.opt.cmdheight:get()
-      local window_w_f = (screen_w - WIDTH_PADDING * 2 - 1) / 2
-      local window_w = math.floor(window_w_f)
-      local window_h = screen_h - HEIGHT_PADDING * 2
-      local center_x = window_w_f + WIDTH_PADDING + 2
-      local center_y = ((vim.opt.lines:get() - window_h) / 2) - vim.opt.cmdheight:get()
-
-      return {
-        style = "minimal",
-        relative = "editor",
-        border = "single",
-        row = center_y,
-        col = center_x,
-        width = window_w,
-        height = window_h
-      }
-    end
-  }
-})
-
-
 vim.api.nvim_create_autocmd("QuitPre", {
   callback = function()
     local tree_wins = {}
@@ -523,7 +453,8 @@ require("telescope").load_extension('luasnip')
 vim.defer_fn(function()
   require('nvim-treesitter.configs').setup {
     -- Add languages to be installed here that you want installed for treesitter
-    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash' },
+    ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim',
+      'bash' },
 
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
@@ -718,24 +649,6 @@ require("nvim-tree").setup({
       quit_on_open = true,
     },
   },
-  on_attach = function(bufnr)
-    local api = require("nvim-tree.api")
-    local FloatPreview = require("float-preview")
-
-    FloatPreview.attach_nvimtree(bufnr)
-    local close_wrap = FloatPreview.close_wrap
-
-    vim.keymap.set("n", "<C-t>", close_wrap(api.node.open.tab))
-    vim.keymap.set("n", "<C-v>", close_wrap(api.node.open.vertical))
-    vim.keymap.set("n", "<C-s>", close_wrap(api.node.open.horizontal))
-    vim.keymap.set("n", "<CR>", close_wrap(api.node.open.edit))
-    vim.keymap.set("n", "<Tab>", close_wrap(api.node.open.preview))
-    vim.keymap.set("n", "o", close_wrap(api.node.open.edit))
-    vim.keymap.set("n", "O", close_wrap(api.node.open.no_window_picker))
-    vim.keymap.set("n", "a", close_wrap(api.fs.create))
-    vim.keymap.set("n", "d", close_wrap(api.fs.remove))
-    vim.keymap.set("n", "r", close_wrap(api.fs.rename))
-  end
 })
 
 -- [[ Configure nvim-cmp ]]

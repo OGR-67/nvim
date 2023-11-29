@@ -1,6 +1,6 @@
 {
   "arrow-function": {
-    "prefix": "af",
+    "prefix": "afn",
     "body": [
       "(${1:first}): ${2:second} => {",
       "\t$0",
