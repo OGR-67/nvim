@@ -260,8 +260,50 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     dependencies = {
       'nvim-treesitter/nvim-treesitter-textobjects',
+      {
+        "JMarkin/nvim-tree.lua-float-preview",
+        lazy = true,
+        -- default
+        opts = {
+          -- wrap nvimtree commands
+          wrap_nvimtree_commands = true,
+          -- lines for scroll
+          scroll_lines = 20,
+          -- window config
+          window = {
+            style = "minimal",
+            relative = "win",
+            border = "rounded",
+            wrap = false,
+          },
+          mapping = {
+            -- scroll down float buffer
+            down = { "<C-d>" },
+            -- scroll up float buffer
+            up = { "<C-e>", "<C-u>" },
+            -- enable/disable float windows
+            toggle = { "<C-x>" },
+          },
+          -- hooks if return false preview doesn't shown
+          hooks = {
+            pre_open = function(path)
+              -- if file > 5 MB or not text -> not preview
+              local size = require("float-preview.utils").get_size(path)
+              if type(size) ~= "number" then
+                return false
+              end
+              local is_text = require("float-preview.utils").is_text(path)
+              return size < 5 and is_text
+            end,
+            post_open = function(bufnr)
+              return true
+            end,
+          },
+        },
+      },
     },
     build = ':TSUpdate',
+
   },
 
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
@@ -270,7 +312,7 @@ require('lazy').setup({
   require 'kickstart.plugins.autoformat',
   -- require 'kickstart.plugins.debug',
 
-  -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
+  -- NOTE: The import below can automatica
   --    You can use this folder to prevent any conflicts with this init.lua if you're interested in keeping
   --    up-to-date with whatever is in the kickstart repo.
   --    Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
@@ -360,6 +402,35 @@ require('telescope').setup {
     },
   },
 }
+
+HEIGHT_PADDING = 10
+WIDTH_PADDING = 15
+require('float-preview').setup({
+  window = {
+    wrap = false,
+    trim_height = false,
+    open_win_config = function()
+      local screen_w = vim.opt.columns:get()
+      local screen_h = vim.opt.lines:get() - vim.opt.cmdheight:get()
+      local window_w_f = (screen_w - WIDTH_PADDING * 2 - 1) / 2
+      local window_w = math.floor(window_w_f)
+      local window_h = screen_h - HEIGHT_PADDING * 2
+      local center_x = window_w_f + WIDTH_PADDING + 2
+      local center_y = ((vim.opt.lines:get() - window_h) / 2) - vim.opt.cmdheight:get()
+
+      return {
+        style = "minimal",
+        relative = "editor",
+        border = "single",
+        row = center_y,
+        col = center_x,
+        width = window_w,
+        height = window_h
+      }
+    end
+  }
+})
+
 
 vim.api.nvim_create_autocmd("QuitPre", {
   callback = function()
@@ -647,13 +718,34 @@ require("nvim-tree").setup({
       quit_on_open = true,
     },
   },
+  on_attach = function(bufnr)
+    local api = require("nvim-tree.api")
+    local FloatPreview = require("float-preview")
+
+    FloatPreview.attach_nvimtree(bufnr)
+    local close_wrap = FloatPreview.close_wrap
+
+    vim.keymap.set("n", "<C-t>", close_wrap(api.node.open.tab))
+    vim.keymap.set("n", "<C-v>", close_wrap(api.node.open.vertical))
+    vim.keymap.set("n", "<C-s>", close_wrap(api.node.open.horizontal))
+    vim.keymap.set("n", "<CR>", close_wrap(api.node.open.edit))
+    vim.keymap.set("n", "<Tab>", close_wrap(api.node.open.preview))
+    vim.keymap.set("n", "o", close_wrap(api.node.open.edit))
+    vim.keymap.set("n", "O", close_wrap(api.node.open.no_window_picker))
+    vim.keymap.set("n", "a", close_wrap(api.fs.create))
+    vim.keymap.set("n", "d", close_wrap(api.fs.remove))
+    vim.keymap.set("n", "r", close_wrap(api.fs.rename))
+  end
 })
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
 local cmp = require 'cmp'
 local luasnip = require 'luasnip'
+
 require('luasnip.loaders.from_vscode').lazy_load()
+require('luasnip.loaders.from_vscode').lazy_load({ paths = { "./my_snippets" } })
+
 luasnip.config.setup {}
 
 cmp.setup {
@@ -765,8 +857,7 @@ vim.opt_local.colorcolumn = "81"
 
 -- [[ My Keymaps ]]
 -- File browser
-vim.keymap.set("n", "<leader>fb", ":NvimTreeOpen<CR>", { desc = "[NvimTree]: Open [B]rowser" })
-vim.keymap.set("n", "<leader>fc", ":NvimTreeClose<CR>", { desc = "[NvimTree]: [C]lose" })
+vim.keymap.set("n", "<leader>fb", ":NvimTreeToggle<CR>", { desc = "[NvimTree]: Open [B]rowser" })
 vim.cmd([[
   autocmd BufEnter * if (winnr("$") == 1 && exists("b:loaded_nvim_tree") && b:loaded_nvim_tree) | NvimTreeClose | endif
 ]])

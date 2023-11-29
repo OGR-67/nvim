@@ -1,0 +1,18 @@
+{
+  "arrow-function": {
+    "prefix": "af",
+    "body": [
+      "(${1:first}): ${2:second} => {",
+      "\t$0",
+      "}"
+    ]
+  },
+  "named-arrow-function": {
+    "prefix": "nfn",
+    "body": [
+      "const ${1:name} = (${2:param}): ${3:type} => {",
+      "\t$0",
+      "}"
+    ]
+  }
+}
