@@ -80,15 +80,16 @@ require 'nvim-treesitter.configs'.setup({
     enable = true
   }
 })
+
 vim.opt_global.expandtab = true
 vim.opt_local.shiftwidth = 4
 vim.cmd([[
-  autocmd FileType javascript setlocal shiftwidth=2
-  autocmd FileType javascriptreact setlocal shiftwidth=2
-  autocmd FileType html setlocal shiftwidth=2
-  autocmd FileType typescript setlocal shiftwidth=2
-  autocmd FileType typescriptreact setlocal shiftwidth=2
-  " Ajoutez d'autres autocmd pour d'autres types de fichiers au besoin
+  autocmd FileType javascript setlocal shiftwidth=2 tabstop=2
+  autocmd FileType javascriptreact setlocal shiftwidth=2 tabstop=2
+  autocmd FileType html setlocal shiftwidth=2 tabstop=2
+  autocmd FileType css setlocal shiftwidth=2 tabstop=2
+  autocmd FileType typescript setlocal shiftwidth=2 tabstop=2
+  autocmd FileType typescriptreact setlocal shiftwidth=4 tabstop=2
 ]])
 
 -- Invisible chars

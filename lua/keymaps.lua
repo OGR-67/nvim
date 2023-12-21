@@ -23,7 +23,8 @@ vim.cmd([[
 vim.keymap.set("n", "<leader>fr", ":so ~/.config/nvim/init.lua<CR>", { desc = "Re-source buffer" })
 
 -- Format document
-vim.keymap.set("n", "<leader>ff", ":Format<CR>", { desc = "Format document" })
+-- vim.keymap.set("n", "<leader>ff", ":Format<CR>", { desc = "Format document" })
+vim.keymap.set("n", "<leader>ff", "<Plug>(prettier-format)", { desc = "Format document" })
 
 -- Search snippets
 vim.keymap.set("n", "<leader>fs", ":Telescope luasnip<CR>", { silent = true, desc = "find a snippet" })
