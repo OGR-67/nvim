@@ -14,11 +14,14 @@ require('lazy_config')
 
 require('setting_options')
 
+require('pluggins_settings.format_on_save')
 require('pluggins_settings.telescope')
 require('pluggins_settings.treesitter')
 require('pluggins_settings.lsp')
+require('pluggins_settings.which_key')
 require('pluggins_settings.nvim_tree')
 require('pluggins_settings.nvim_cmp')
+require('pluggins_settings.markdown_preview')
 
 require('keymaps')
 
