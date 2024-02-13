@@ -1,6 +1,6 @@
 -- [[ Configure LSP ]]
 --  This function gets run when an LSP connects to a particular buffer.
-local on_attach = function(_, bufnr)
+local on_attach = function(client, bufnr)
   -- A function that lets us more easily define mappings specific
   -- for LSP related items. It sets the mode, buffer and description for us each time.
   local nmap = function(keys, func, desc)
@@ -25,6 +25,18 @@ local on_attach = function(_, bufnr)
   nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
   nmap('<C-k>', vim.lsp.buf.signature_help, 'Signature Documentation')
 
+  -- Organize imports in typescript
+  if client.name == 'tsserver' then
+    nmap('<leader>co',
+      function()
+        vim.lsp.buf.execute_command({
+          command = "_typescript.organizeImports",
+          arguments = { vim.api.nvim_buf_get_name(0) }
+        })
+      end,
+      "Organize imports")
+  end
+
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
   nmap('<leader>wa', vim.lsp.buf.add_workspace_folder, '[W]orkspace [A]dd Folder')
@@ -34,7 +46,7 @@ local on_attach = function(_, bufnr)
   end, '[W]orkspace [L]ist Folders')
 
   -- diagnostics
-  vim.lsp.diagnostic.configurations[_.id] = {
+  vim.lsp.diagnostic.configurations[client.id] = {
     virtual_text = true,
     signs = true,
     underline = true,
@@ -84,6 +96,7 @@ local mason_lspconfig = require 'mason-lspconfig'
 mason_lspconfig.setup {
   ensure_installed = vim.tbl_keys(servers),
 }
+
 
 mason_lspconfig.setup_handlers {
   function(server_name)
